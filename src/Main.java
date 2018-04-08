@@ -12,18 +12,16 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JPanel;
-import javax.swing.JRootPane;
 import javax.swing.UIManager;
-
-import org.apache.commons.lang3.math.NumberUtils;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.border.BevelBorder;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 
 public class Main {
+	private static final int FEHLER = 0;														// Konstanten für den Status der Funktion zum Einfügen von Elementen
+	private static final int OK = 1;
+	private static final int VORHANDEN = 2;
 
 	private JFrame frmBinrerBaum;
 	private JTextField addTxtF;
@@ -77,11 +75,12 @@ public class Main {
 		panel.add(label);
 		
 		JButton addBtn = new JButton("hinzuf\u00FCgen");
-		Action addBtnAction = new AbstractAction() {											// Erstellen einer Action, um sie sowohl für den addBtn und addTxtF zu setzen
+		@SuppressWarnings("serial")
+		Action addBtnAction = new AbstractAction() {											// Erstellen einer Action, um sie sowohl für den addBtn als auch für addTxtF zu setzen
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					int insertWert = NumberUtils.createInteger(addTxtF.getText());				// Eingefügten Text zu Integer konvertieren						
+					int insertWert = Integer.parseInt(addTxtF.getText());						// Eingefügten Text zu Integer konvertieren	
 					if(root == null) {															// Root setzen, falls nicht vorhanden
 						root = new TElement();
 						root.setWert(insertWert);
@@ -89,8 +88,17 @@ public class Main {
 					} else {																	
 							TElement insertElement = new TElement();							// Element setzen und einfügen
 							insertElement.setWert(insertWert);				
-							insertElement(root, insertElement);
-							statusMessage.setText("Element mit Wert " + insertWert + " eingefügt");
+							switch (insertElement(root, insertElement)) {
+							case 0:
+								statusMessage.setText("Beim Einfügen ist ein Fehler aufgetreten");
+								break;
+							case 1:
+								statusMessage.setText("Element mit Wert " + insertWert + " eingefügt");
+								break;
+							case 2:
+								statusMessage.setText("Element mit Wert " + insertWert + " ist bereits vorhanden");
+								break;
+							}
 					}												
 				} catch (NumberFormatException ex) {											// Fange, wenn eingefügter Text kein Integer ist
 					System.err.println(ex);														// Gebe Fehler in Konsole und auf dem Bildschirm aus
@@ -106,7 +114,7 @@ public class Main {
 		panel.add(addBtn);
 		
 		addTxtF = new JTextField();
-		addTxtF.setToolTipText("Eingabe muss eine ganze Zahl sein");
+		addTxtF.setToolTipText("Nur ganze Zahlen");
 		addTxtF.setColumns(10);
 		addTxtF.addActionListener(addBtnAction);
 		addTxtF.setBounds(10, 27, 100, 20);
@@ -179,39 +187,37 @@ public class Main {
 	
 	/**
 	 * Fügt ein Objekt der Klasse TElement in einem Baum ein
-	 * param:	r: TElement	: Baum
-	 * 			e: TElement	: NeuesElement
+	 * param:	r: TElement	: aktuelles Element
+	 * 			e: TElement	: einzufügendes Element
 	 * return:	 : int		: 0: Fehler, 1: OK, 2: Element schon im Baum
 	 * Version 1
-	 * Höhe noch nicht richtig gesetzt
+	 * Höhe setzen entfernt
 	 */
 	private static int insertElement(TElement r, TElement e) {
 		try {
-			if (r.getWert() == e.getWert())	{													// Überprüfen, ob die Werte des Root und des Einzufügenden Elements gleich sind
-				return 2;																		
-			} else if(e.getWert() < r.getWert()) {												// Links rekursiv einfügen, wenn der Wert des einzufügenden Elements kleiner als des Root Elements ist und
+			int status = FEHLER;																// Status der Funktion für Wiedergabe
+			if (r.getWert() == e.getWert())	{													// Überprüfen, ob die Werte des aktuellen Elements und des Einzufügenden Elements gleich sind
+				return VORHANDEN;																		
+			} else if(e.getWert() < r.getWert()) {												// Links rekursiv einfügen, wenn der Wert des einzufügenden Elements kleiner als des aktuellen Elements ist und
 				if(r.getLeft() != null) {														// ein linkes Element gesetzt ist
-					insertElement(r.getLeft(), e);
+					status = insertElement(r.getLeft(), e);
 				} else {
-					r.setLeft(e);																// Andernfalls das einzufügende Element links im Root Element einsetzen
-					if(r.getRight() == null) {													// Erhöhe Hoehe von Root um 1, wenn rechts nicht gesetzt ist
-						r.setHoehe(r.getHoehe()+1);
-					}
+					r.setLeft(e);																// Einzufügendes Element im aktuellen Element links setzen
+					status = OK;
 				}
-			} else if(e.getWert() > r.getWert()) {												// Rechts rekursiv einfügen, wenn der Wert des einzufügenden Elements größer als des Root Elements ist und
+			} else if(e.getWert() > r.getWert()) {												// Rechts rekursiv einfügen, wenn der Wert des einzufügenden Elements größer als des aktuellen Elements ist und
 				if(r.getRight() != null) {														// ein rechtes Element gesetzt ist
-					insertElement(r.getRight(), e);
+					status = insertElement(r.getRight(), e);
 				} else {
-					r.setRight(e);																// Andernfalls das einzufügende Element links im Root Element einsetzen
-					if(r.getLeft() == null) {													// Erhöhe Hoehe von Root um 1, wenn links nicht gesetzt ist
-						r.setHoehe(r.getHoehe() + 1);
-					}
+					r.setRight(e);																// Einzufügendes Element im aktuellen Element rechts setzen
+					status = OK;
 				}
 			}
-			return 1;
+			r.setHoehe(countHoehe(r));															// Höhe aktualisieren
+			return status;																		// Status wiedergeben
 		} catch (Exception ex) {
 			System.err.println(ex);
-			return 0;
+			return FEHLER;
 		}
 	}
 	
@@ -221,7 +227,7 @@ public class Main {
 	 * 			wert: int		: Wert
 	 * return:	 	: int		: 0: Fehler, 1: Gefunden, 2: Nicht gefunden
 	 * Version 1
-	 * Erstellt
+	 * Noch nicht durchdacht
 	 */
 	private static int FindElement(TElement r, int wert) {
 		try {
@@ -287,5 +293,32 @@ public class Main {
 			inOrderList.add(InOrder(r.getRight()));
 		}
 		return String.join(", ", inOrderList);													// ArrayList mit Komma zusammengefügt zurückgeben
+	}
+	
+	/**
+	 * Zählt das Maximum der am Baum hängenden Ebenen
+	 * param:	r: TElement	: Baum
+	 * Version 1
+	 * Erstellt
+	 */
+	private static int countHoehe(TElement r) {													
+		return countHoehe(r, 0);																
+	}
+	private static int countHoehe(TElement r, int curHoehe) {
+		int leftHoehe=0;																		// 0 als standard Höhe Wert
+		int rightHoehe=0;
+		if(r.getLeft()!= null) {
+			leftHoehe = countHoehe(r.getLeft(), curHoehe + 1);									// Links mit einer Ebene erhöht fortfahren Ergebnis zwischenspeicher
+		}
+		if(r.getRight()!= null) {
+			rightHoehe = countHoehe(r.getRight(), curHoehe + 1);								// Rechts mit einer Ebene erhöht fortfahren und Ergebnis zwischenspeicher
+		}
+		if(leftHoehe>curHoehe) {
+			curHoehe=leftHoehe;																	// Links als aktuelle Höhe setzen, wenn aktuelle Höhe kleiner ist
+		}
+		if(rightHoehe>curHoehe) {
+			curHoehe=rightHoehe;																// Rechts als aktuelle Höhe setzen, wenn aktuelle Höhe kleiner ist
+		} 
+		return curHoehe;																		// Aktuelle Höhe zurückgeben
 	}
 }
