@@ -48,5 +48,9 @@ public class TElement {
 		this.right = right;
 	}
 
+	@Override
+	public TElement clone() throws CloneNotSupportedException {
+		return (TElement)super.clone();
+	}
 	
 }

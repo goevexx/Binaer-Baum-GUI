@@ -19,16 +19,21 @@ import java.awt.event.ActionEvent;
 import javax.swing.border.BevelBorder;
 
 public class Main {
-	private static final int FEHLER = 0;														// Konstanten für den Status der Funktion zum Einfügen von Elementen
-	private static final int OK = 1;
+	private static final int FEHLER = 0;														
+	private static final int OK = 1;															// Konstanten für den Status der Funktion insertElement() zum Einfügen von Elementen
 	private static final int VORHANDEN = 2;
+	private static final int GELOESCHT = 1;														// Konstanten für den Status der Funktion deleteElement() zum Einfügen von Elementen
+	private static final int NICHT_GEFUNDEN = 2;
+	private static final int ALL = 0;															// Konstanten für den Status der Funktion updateHoehe() zum Einfügen von Elementen
+	private static final int LEFT = 1;
+	private static final int RIGHT = 2;
 
 	private JFrame frmBinrerBaum;
 	private JTextField addTxtF;
 	private JTextField orderTxtF;
 	private JLabel statusMessage;
 	
-	private TElement root;
+	private static TElement root;
 
 	/**
 	 * Launch the application.
@@ -88,18 +93,18 @@ public class Main {
 					} else {																	
 							TElement insertElement = new TElement();							// Element setzen und einfügen
 							insertElement.setWert(insertWert);				
-							switch (insertElement(root, insertElement)) {
-							case 0:
+							switch (insertElement(insertElement)) {
+							case FEHLER:
 								statusMessage.setText("Beim Einfügen ist ein Fehler aufgetreten");
 								break;
-							case 1:
+							case OK:
 								statusMessage.setText("Element mit Wert " + insertWert + " eingefügt");
 								break;
-							case 2:
+							case VORHANDEN:
 								statusMessage.setText("Element mit Wert " + insertWert + " ist bereits vorhanden");
 								break;
 							}
-					}												
+					}		
 				} catch (NumberFormatException ex) {											// Fange, wenn eingefügter Text kein Integer ist
 					System.err.println(ex);														// Gebe Fehler in Konsole und auf dem Bildschirm aus
 					JOptionPane.showMessageDialog(frmBinrerBaum, "Ungültige Eingabe");
@@ -119,6 +124,49 @@ public class Main {
 		addTxtF.addActionListener(addBtnAction);
 		addTxtF.setBounds(10, 27, 100, 20);
 		panel.add(addTxtF);
+		
+		JButton searchBtn = new JButton("suchen");
+		searchBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					int searchWert = Integer.parseInt(addTxtF.getText());						// Gesuchten Text zu Integer konvertieren	
+					if(FindElement(searchWert)==null)
+						statusMessage.setText("Element mit dem Wert " + searchWert + " ist nicht im Baum vorhanden");
+					else
+						statusMessage.setText("Element mit dem Wert " + searchWert + " ist im Baum vorhanden");
+				}catch (NumberFormatException ex){												// Fange, wenn gesuchter Text kein Integer ist
+					System.err.println(ex);														// Gebe Fehler in Konsole und auf dem Bildschirm aus
+					JOptionPane.showMessageDialog(frmBinrerBaum, "Ungültige Eingabe");
+				}
+			}
+		});
+		searchBtn.setBounds(230, 26, 82, 23);
+		panel.add(searchBtn);
+		
+		JButton deleteBtn = new JButton("l\u00F6schen");
+		deleteBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					int deleteWert = Integer.parseInt(addTxtF.getText());						// Zu löschenden Text zu Integer konvertieren	
+					switch(deleteElement(deleteWert)) {
+					case FEHLER:
+						statusMessage.setText("Beim Löschen ist ein Fehler aufgetreten");
+						break;
+					case OK:
+						statusMessage.setText("Element mit Wert " + deleteWert + " gelöscht");
+						break;
+					case VORHANDEN:
+						statusMessage.setText("Element mit Wert " + deleteWert + " nicht gefunden");
+						break;
+					}
+				} catch (NullPointerException ex) {												// Fange wenn FindElement NullPointerException wirft
+					System.err.println(ex);														// Gebe Fehler in Konsole und auf dem Bildschirm aus
+					JOptionPane.showMessageDialog(frmBinrerBaum, "Das Root Element ist nicht gesetzt");
+				}
+			}
+		});
+		deleteBtn.setBounds(323, 26, 94, 23);
+		panel.add(deleteBtn);
 		
 		JPanel panel_1 = new JPanel();
 		panel_1.setBorder(UIManager.getBorder("TitledBorder.border"));
@@ -193,6 +241,9 @@ public class Main {
 	 * Version 1
 	 * Höhe setzen entfernt
 	 */
+	private static int insertElement(TElement e) {
+		return insertElement(root, e);															// Root als standard Element, wo eingefügt wird
+	}
 	private static int insertElement(TElement r, TElement e) {
 		try {
 			int status = FEHLER;																// Status der Funktion für Wiedergabe
@@ -213,28 +264,105 @@ public class Main {
 					status = OK;
 				}
 			}
-			r.setHoehe(countHoehe(r));															// Höhe aktualisieren
+			r.setHoehe(calCurHoehe(r));															// Höhe aktualisieren
 			return status;																		// Status wiedergeben
 		} catch (Exception ex) {
-			System.err.println(ex);
 			return FEHLER;
 		}
 	}
 	
 	/**
-	 * Findet ein Element mit bestimmten Wert
+	 * Sucht ein Element nach eingegebenem Wert
 	 * param:	r	: TElement	: Baum
 	 * 			wert: int		: Wert
 	 * return:	 	: int		: 0: Fehler, 1: Gefunden, 2: Nicht gefunden
 	 * Version 1
 	 * Noch nicht durchdacht
 	 */
-	private static int FindElement(TElement r, int wert) {
+	private static TElement FindElement(int wert) {
+		return FindElement(root, wert);
+	}
+	private static TElement FindElement(TElement r, int wert) throws NullPointerException{
 		try {
-			return 0;
+			if(r.getWert() == wert) {															// Wenn der Wert des aktuellen Elements dem gesuchten Element gleicht, aktuelles Element zurückgeben
+				return r;
+			} else {
+				if (r.getLeft() != null) {
+					TElement leftElement = FindElement(r.getLeft(), wert);						// Im linken Zweig rekursiv suchen
+					if(leftElement!= null){														
+						return leftElement;														// Gefundenes Element zurückgeben, falls gefunden
+					}
+				}
+				if (r.getRight() != null) {
+					TElement rightElement = FindElement(r.getRight(), wert);
+					if(rightElement != null){
+						return rightElement;													// Gefundenes Element zurückgeben, falls gefunden
+					}
+				}
+			} 
+			return null;																		// Werfe falls r nicht gesetzt ist
 		} catch (Exception ex) {
-			System.err.println(ex);
-			return 0;
+			System.err.println(ex);																// Fehler in der Konsole ausgeben
+			return null;
+		}
+	}
+	
+	/**
+	 * Löscht ein Element nach eingegebenem Wert 
+	 * param:	r	: TElement	: Baum
+	 * 			wert: int		: Wert
+	 * return:	 	: int		: 0: Fehler, 1: Gelöscht, 2: Nicht gefunden
+	 * Version 1
+	 * Noch nicht durchdacht
+	 */
+	private static int deleteElement(int wert) {
+		try {
+			TElement deleteElement = FindElement(wert);											// Zu löschendes Element suchen
+			TElement replaceElement = null;														// Mit zu löschendem Element zu ersetzendes Element
+			TElement parentReplaceElement = null;												// Vorgänger des ersetzenden Elements
+			if(deleteElement != null) {
+				if(deleteElement.getLeft() != null) {
+					parentReplaceElement = deleteElement;
+					replaceElement = deleteElement.getLeft();
+					while (replaceElement.getRight() != null) {
+						parentReplaceElement = replaceElement;
+						replaceElement = replaceElement.getRight();
+					}
+					deleteElement.setWert(replaceElement.getWert());
+					if(parentReplaceElement != deleteElement) {
+						parentReplaceElement.setRight(replaceElement.getLeft());
+					} else {
+						parentReplaceElement.setLeft(replaceElement.getLeft());
+					}
+				} else if(deleteElement.getRight() != null) {
+					parentReplaceElement = deleteElement;
+					replaceElement = deleteElement.getRight();
+					while (replaceElement.getLeft() != null) {
+						parentReplaceElement = replaceElement;
+						replaceElement = replaceElement.getLeft();
+					}
+					deleteElement.setWert(replaceElement.getWert());
+					if(parentReplaceElement != deleteElement) {
+						parentReplaceElement.setLeft(replaceElement.getRight());
+					} else {
+						parentReplaceElement.setRight(replaceElement.getRight());
+					}
+				} else if(root ==deleteElement) {
+					root = null;
+				}
+				if(root != null && deleteElement != null) {
+					if(deleteElement.getWert() < root.getWert()) {
+						updateHoehe(LEFT);
+					} else if(deleteElement.getWert() > root.getWert()){
+						updateHoehe(RIGHT);
+					}
+				}
+				return GELOESCHT;
+			} else {
+				return NICHT_GEFUNDEN;
+			}
+		} catch (Exception ex) {
+			return FEHLER;
 		}
 	}
 
@@ -301,17 +429,14 @@ public class Main {
 	 * Version 1
 	 * Erstellt
 	 */
-	private static int countHoehe(TElement r) {													
-		return countHoehe(r, 0);																
-	}
-	private static int countHoehe(TElement r, int curHoehe) {
+	private static int calMaxHoehe(TElement r, int curHoehe) {
 		int leftHoehe=0;																		// 0 als standard Höhe Wert
 		int rightHoehe=0;
 		if(r.getLeft()!= null) {
-			leftHoehe = countHoehe(r.getLeft(), curHoehe + 1);									// Links mit einer Ebene erhöht fortfahren Ergebnis zwischenspeicher
+			leftHoehe = calMaxHoehe(r.getLeft(), curHoehe + 1);									// Links mit einer Ebene erhöht fortfahren Ergebnis zwischenspeichern
 		}
 		if(r.getRight()!= null) {
-			rightHoehe = countHoehe(r.getRight(), curHoehe + 1);								// Rechts mit einer Ebene erhöht fortfahren und Ergebnis zwischenspeicher
+			rightHoehe = calMaxHoehe(r.getRight(), curHoehe + 1);								// Rechts mit einer Ebene erhöht fortfahren und Ergebnis zwischenspeichern
 		}
 		if(leftHoehe>curHoehe) {
 			curHoehe=leftHoehe;																	// Links als aktuelle Höhe setzen, wenn aktuelle Höhe kleiner ist
@@ -319,6 +444,68 @@ public class Main {
 		if(rightHoehe>curHoehe) {
 			curHoehe=rightHoehe;																// Rechts als aktuelle Höhe setzen, wenn aktuelle Höhe kleiner ist
 		} 
-		return curHoehe;																		// Aktuelle Höhe zurückgeben
+		return curHoehe;																		// Maximale Höhe zurückgeben
+	}
+	
+	/**
+	 * Zählt die aktuelle Höhe der am Baum hängenden Elemente und des baum Elements
+	 * param:	r: TElement	: Baum
+	 * Version 1
+	 * Erstellt
+	 */
+	private static int calCurHoehe(TElement r) {													
+		return calCurHoehe(r, 0);																
+	}
+	private static int calCurHoehe(TElement r, int curHoehe) {
+		int leftHoehe=0;																		// 0 als standard Höhe Wert
+		int rightHoehe=0;
+		if(r.getLeft()!= null) {
+			leftHoehe = calMaxHoehe(r.getLeft(), curHoehe + 1);									// Links mit einer Ebene erhöht fortfahren Ergebnis zwischenspeichern
+		}
+		if(r.getRight()!= null) {
+			rightHoehe = calMaxHoehe(r.getRight(), curHoehe + 1);								// Rechts mit einer Ebene erhöht fortfahren und Ergebnis zwischenspeichern
+		}
+		return leftHoehe-rightHoehe;															// Aktuelle Höhe zurückgeben
+	}
+	
+	
+	/**
+	 * Aktualisiert die Höhen der Elemente
+	 * param:	r: TElement	: Baum
+	 * Version 1
+	 * Funktioniert noch nicht
+	 */
+	private static void updateHoehe(int mode) {
+		updateHoehe(root, mode);
+	}
+	private static void updateHoehe(TElement r, int mode) {							
+		switch(mode) {
+		case ALL:
+			if(r.getLeft() != null) {
+				updateHoehe(r, LEFT);
+			}
+			if(r.getRight() != null) {
+				updateHoehe(r, RIGHT);
+			}
+			break;
+		case LEFT:
+			r.setHoehe(calCurHoehe(r));
+			if(r.getLeft() != null) {
+				r=r.getLeft();
+			} else {
+				return;
+			}
+			break;
+		case RIGHT:
+			r.setHoehe(calCurHoehe(r));
+			if(r.getRight() != null) {
+				r=r.getRight();
+			} else {
+				return;
+			}
+			break;
+		}
+		System.out.println(r.getHoehe());
+		updateHoehe(r, ALL);
 	}
 }
