@@ -159,9 +159,9 @@ public class Main {
 						statusMessage.setText("Element mit Wert " + deleteWert + " nicht gefunden");
 						break;
 					}
-				} catch (NullPointerException ex) {												// Fange wenn FindElement NullPointerException wirft
+				} catch (NumberFormatException ex){												// Fange, wenn zu löschender Text kein Integer ist
 					System.err.println(ex);														// Gebe Fehler in Konsole und auf dem Bildschirm aus
-					JOptionPane.showMessageDialog(frmBinrerBaum, "Das Root Element ist nicht gesetzt");
+					JOptionPane.showMessageDialog(frmBinrerBaum, "Ungültige Eingabe");
 				}
 			}
 		});
@@ -181,6 +181,7 @@ public class Main {
 					orderTxtF.setText(PostOrder(root));
 				} catch (NullPointerException ex) {
 					System.err.println(ex);
+					orderTxtF.setText("");
 					JOptionPane.showMessageDialog(frmBinrerBaum, "Root is nicht gesetzt");
 				}
 			}
@@ -195,6 +196,7 @@ public class Main {
 					orderTxtF.setText(InOrder(root));
 				} catch (NullPointerException ex) {
 					System.err.println(ex);
+					orderTxtF.setText("");
 					JOptionPane.showMessageDialog(frmBinrerBaum, "Root is nicht gesetzt");
 				}
 			}
@@ -209,6 +211,7 @@ public class Main {
 					orderTxtF.setText(PreOrder(root));
 				} catch (NullPointerException ex) {
 					System.err.println(ex);
+					orderTxtF.setText("");
 					JOptionPane.showMessageDialog(frmBinrerBaum, "Root is nicht gesetzt");
 				}
 			}
@@ -277,7 +280,7 @@ public class Main {
 	 * 			wert: int		: Wert
 	 * return:	 	: int		: 0: Fehler, 1: Gefunden, 2: Nicht gefunden
 	 * Version 1
-	 * Noch nicht durchdacht
+	 * Klappt
 	 */
 	private static TElement FindElement(int wert) {
 		return FindElement(root, wert);
@@ -312,57 +315,53 @@ public class Main {
 	 * param:	r	: TElement	: Baum
 	 * 			wert: int		: Wert
 	 * return:	 	: int		: 0: Fehler, 1: Gelöscht, 2: Nicht gefunden
-	 * Version 1
-	 * Noch nicht durchdacht
+	 * Version 3
+	 * Komplett überarbeitet 
 	 */
 	private static int deleteElement(int wert) {
 		try {
-			TElement deleteElement = FindElement(wert);											// Zu löschendes Element suchen
-			TElement replaceElement = null;														// Mit zu löschendem Element zu ersetzendes Element
-			TElement parentReplaceElement = null;												// Vorgänger des ersetzenden Elements
-			if(deleteElement != null) {
-				if(deleteElement.getLeft() != null) {
-					parentReplaceElement = deleteElement;
-					replaceElement = deleteElement.getLeft();
-					while (replaceElement.getRight() != null) {
-						parentReplaceElement = replaceElement;
-						replaceElement = replaceElement.getRight();
-					}
-					deleteElement.setWert(replaceElement.getWert());
-					if(parentReplaceElement != deleteElement) {
-						parentReplaceElement.setRight(replaceElement.getLeft());
-					} else {
-						parentReplaceElement.setLeft(replaceElement.getLeft());
-					}
-				} else if(deleteElement.getRight() != null) {
-					parentReplaceElement = deleteElement;
-					replaceElement = deleteElement.getRight();
-					while (replaceElement.getLeft() != null) {
-						parentReplaceElement = replaceElement;
-						replaceElement = replaceElement.getLeft();
-					}
-					deleteElement.setWert(replaceElement.getWert());
-					if(parentReplaceElement != deleteElement) {
-						parentReplaceElement.setLeft(replaceElement.getRight());
-					} else {
-						parentReplaceElement.setRight(replaceElement.getRight());
-					}
-				} else if(root ==deleteElement) {
-					root = null;
-				}
-				if(root != null && deleteElement != null) {
-					if(deleteElement.getWert() < root.getWert()) {
-						updateHoehe(LEFT);
-					} else if(deleteElement.getWert() > root.getWert()){
-						updateHoehe(RIGHT);
-					}
-				}
-				return GELOESCHT;
-			} else {
-				return NICHT_GEFUNDEN;
-			}
-		} catch (Exception ex) {
+			deleteElement(root, wert);
+			return GELOESCHT;
+		} catch(Exception ex) {
+			System.err.println(ex);
 			return FEHLER;
+		}
+	}
+	private static TElement deleteElement(TElement r, int wert) throws Exception{
+		try {
+			if (r == null) {
+				return null;
+			}
+			if(wert < r.getWert()) {
+				r.setLeft(deleteElement(r.getLeft(), wert));									// Links rekursiv, wenn Wert kleiner
+			} else if(wert > r.getWert()){
+				r.setRight(deleteElement(r.getRight(), wert));									// Recht rekursiv, wenn Wert größer
+			} else {																			// Passendes Element gefunden
+				if(r.getLeft() != null) {
+					if(r.getLeft().getRight() != null) {										// LR
+						r.setWert(biggestWert(r.getLeft()));									// Höchsten darunter liegenden Wert setzen
+						r.setLeft(removeBiggestWertElement(r.getLeft()));						// Element ohne Element mit höchstem Wert setzen
+					} else {																	// LL
+						r.replace(r.getLeft());													// Element ohne aktuelles Element setzen
+					}
+				}else if(r.getRight() != null) {
+					if(r.getRight().getLeft() != null) {										// RL
+						r.setWert(smallestWert(r.getRight()));									// Niedrigsten darunter liegenden Wert setzen
+						r.setRight(removeSmallestWertElement(r.getRight()));					// Element ohne Element mit niedrigstem Wert setzen
+					} else {																	// RR
+						r.replace(r.getRight());												// Element ohne aktuelles Element setzen
+					}
+				}  else {																		// Ohne Childs
+					if(r == root){																
+						root = null; 															
+					}
+					return null;									
+				}
+			}
+			r.setHoehe(calCurHoehe(r));
+			return r;
+		}catch(Exception ex) {
+			throw new Exception(ex);
 		}
 	}
 
@@ -466,46 +465,69 @@ public class Main {
 			rightHoehe = calMaxHoehe(r.getRight(), curHoehe + 1);								// Rechts mit einer Ebene erhöht fortfahren und Ergebnis zwischenspeichern
 		}
 		return leftHoehe-rightHoehe;															// Aktuelle Höhe zurückgeben
-	}
-	
+	}	
 	
 	/**
-	 * Aktualisiert die Höhen der Elemente
+	 * Gibt kleinsten Wert im Baum zurück
 	 * param:	r: TElement	: Baum
 	 * Version 1
-	 * Funktioniert noch nicht
+	 * Erstellt
 	 */
-	private static void updateHoehe(int mode) {
-		updateHoehe(root, mode);
-	}
-	private static void updateHoehe(TElement r, int mode) {							
-		switch(mode) {
-		case ALL:
-			if(r.getLeft() != null) {
-				updateHoehe(r, LEFT);
-			}
-			if(r.getRight() != null) {
-				updateHoehe(r, RIGHT);
-			}
-			break;
-		case LEFT:
-			r.setHoehe(calCurHoehe(r));
-			if(r.getLeft() != null) {
-				r=r.getLeft();
-			} else {
-				return;
-			}
-			break;
-		case RIGHT:
-			r.setHoehe(calCurHoehe(r));
-			if(r.getRight() != null) {
-				r=r.getRight();
-			} else {
-				return;
-			}
-			break;
-		}
-		System.out.println(r.getHoehe());
-		updateHoehe(r, ALL);
-	}
+	private static int smallestWert(TElement r){
+        int smallW = r.getWert();
+        while (r.getLeft() != null) {
+        	smallW = r.getLeft().getWert();
+            r = r.getLeft();
+        }
+        return smallW;
+    }
+	
+	/**
+	 * Gibt höchsten Wert im Baum zurück
+	 * param:	r: TElement	: Baum
+	 * Version 1
+	 * Erstellt
+	 */
+	private static int biggestWert(TElement r){
+        int biggestW = r.getWert();
+        while (r.getRight() != null) {
+        	biggestW = r.getRight().getWert();
+            r = r.getRight();
+        }
+        return biggestW;
+    }
+	
+	/**
+	 * Gibt Baum ohne Element mit kleinstem Wert zurück
+	 * param:	r: TElement	: Baum
+	 * Version 1
+	 * Erstellt
+	 */
+	private static TElement removeSmallestWertElement(TElement r){
+		TElement smallestWertElement = r;
+		TElement smallestWertParentElement = null;
+        while (smallestWertElement.getLeft() != null) {
+        	smallestWertParentElement = smallestWertElement;
+        	smallestWertElement = smallestWertElement.getLeft();
+        }
+        smallestWertParentElement.setLeft(null);
+        return r;
+    }
+	
+	/**
+	 * Gibt Baum ohne Element mit höchstem Wert zurück
+	 * param:	r: TElement	: Baum
+	 * Version 1
+	 * Erstellt
+	 */
+	private static TElement removeBiggestWertElement(TElement r){
+		TElement biggestWertElement = r;
+		TElement biggestWertParentElement = null;
+        while (biggestWertElement.getRight() != null) {
+        	biggestWertParentElement = biggestWertElement;
+        	biggestWertElement = biggestWertElement.getRight();
+        }
+        biggestWertParentElement.setRight(null);
+        return r;
+    }
 }

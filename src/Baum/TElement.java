@@ -47,6 +47,13 @@ public class TElement {
 	public void setRight(TElement right) {
 		this.right = right;
 	}
+	
+	public void replace(TElement replace) {
+		this.data = replace.getWert();
+		this.hoehe = replace.getHoehe();
+		this.left = replace.getLeft();
+		this.right = replace.getRight();
+	}
 
 	@Override
 	public TElement clone() throws CloneNotSupportedException {
