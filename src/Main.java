@@ -1,10 +1,13 @@
-import java.awt.Component;
 import java.awt.EventQueue;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
 
 import Baum.TElement;
+import Baum.treeListener;
+
 import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -17,23 +20,25 @@ import javax.swing.UIManager;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.border.BevelBorder;
+import javax.swing.JScrollPane;
+import java.awt.event.MouseWheelListener;
+import java.awt.event.MouseWheelEvent;
+
+import java.awt.Color;
 
 public class Main {
 	private static final int FEHLER = 0;														
 	private static final int OK = 1;															// Konstanten für den Status der Funktion insertElement() zum Einfügen von Elementen
 	private static final int VORHANDEN = 2;
 	private static final int GELOESCHT = 1;														// Konstanten für den Status der Funktion deleteElement() zum Einfügen von Elementen
-	private static final int NICHT_GEFUNDEN = 2;
-	private static final int ALL = 0;															// Konstanten für den Status der Funktion updateHoehe() zum Einfügen von Elementen
-	private static final int LEFT = 1;
-	private static final int RIGHT = 2;
 
 	private JFrame frmBinrerBaum;
 	private JTextField addTxtF;
 	private JTextField orderTxtF;
+	private TreePanel treePanel;
 	private JLabel statusMessage;
 	
-	private static TElement root;
+	public static TElement root;
 
 	/**
 	 * Launch the application.
@@ -87,11 +92,11 @@ public class Main {
 				try {
 					int insertWert = Integer.parseInt(addTxtF.getText());						// Eingefügten Text zu Integer konvertieren	
 					if(root == null) {															// Root setzen, falls nicht vorhanden
-						root = new TElement();
+						root = new TElement(treePanel);
 						root.setWert(insertWert);
 						statusMessage.setText("Root mit Wert " + insertWert + " gesetzt");
 					} else {																	
-							TElement insertElement = new TElement();							// Element setzen und einfügen
+							TElement insertElement = new TElement(treePanel);					// Element setzen und einfügen
 							insertElement.setWert(insertWert);				
 							switch (insertElement(insertElement)) {
 							case FEHLER:
@@ -168,6 +173,20 @@ public class Main {
 		deleteBtn.setBounds(323, 26, 94, 23);
 		panel.add(deleteBtn);
 		
+		JButton clearTreeBtn = new JButton("Alles l\u00F6schen");
+		clearTreeBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				root = null;
+				treePanel.paintComponent(treePanel.getGraphics());
+				orderTxtF.setText("");
+				addTxtF.setText("");
+				addTxtF.requestFocus();	
+				statusMessage.setText("Baum gelöscht");
+			}
+		});
+		clearTreeBtn.setBounds(533, 26, 114, 23);
+		panel.add(clearTreeBtn);
+		
 		JPanel panel_1 = new JPanel();
 		panel_1.setBorder(UIManager.getBorder("TitledBorder.border"));
 		panel_1.setBounds(10, 376, 657, 43);
@@ -234,6 +253,28 @@ public class Main {
 		statusMessage = new JLabel("Lege den Wert des Root Elements fest!");
 		statusMessage.setBounds(5, 4, 652, 14);
 		panel_2.add(statusMessage);
+		
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.addMouseWheelListener(new MouseWheelListener() {
+			public void mouseWheelMoved(MouseWheelEvent e) {
+//				treePanel.setScale(treePanel.getScale() + e.getWheelRotation()*0.1);
+				
+//				treePanel.setSize((int)(treePanel.getSize().width + e.getWheelRotation()*0.1), (int)(treePanel.getSize().height + e.getWheelRotation()*0.1));
+//				treePanel.setPreferredSize(treePanel.getSize());
+//				treePanel.setSize(1000,1000);
+//				treePanel.setPreferredSize(new Dimension((int)(treePanel.getPreferredSize().width + e.getWheelRotation()*-1), (int)(treePanel.getPreferredSize().height + e.getWheelRotation()*-1)));
+//				treePanel.setPreferredSize(new Dimension(100, 100));
+//				System.out.println(treePanel.getPreferredSize());
+//				treePanel.paintComponent(treePanel.getGraphics());
+			}
+		});
+		scrollPane.setWheelScrollingEnabled(false);
+		scrollPane.setBounds(20, 83, 647, 286);
+		frmBinrerBaum.getContentPane().add(scrollPane);
+		
+		treePanel = new TreePanel();
+		scrollPane.setViewportView(treePanel);
+		treePanel.setLayout(null);
 	}
 	
 	/**
@@ -338,17 +379,23 @@ public class Main {
 				r.setRight(deleteElement(r.getRight(), wert));									// Recht rekursiv, wenn Wert größer
 			} else {																			// Passendes Element gefunden
 				if(r.getLeft() != null) {
-					if(r.getLeft().getRight() != null) {										// LR
+					if(r.getLeft().getRight() != null) {										// LR löschen
 						r.setWert(biggestWert(r.getLeft()));									// Höchsten darunter liegenden Wert setzen
 						r.setLeft(removeBiggestWertElement(r.getLeft()));						// Element ohne Element mit höchstem Wert setzen
-					} else {																	// LL
+					} else {																	// LL  löschen
+						if(r.getRight() != null) {
+							r.getLeft().setRight(r.getRight());									// Rechtes Element an vorgesehenem linkem Element verknüpfen
+						}
 						r.replace(r.getLeft());													// Element ohne aktuelles Element setzen
 					}
-				}else if(r.getRight() != null) {
-					if(r.getRight().getLeft() != null) {										// RL
+				} else if(r.getRight() != null) {
+					if(r.getRight().getLeft() != null) {										// RL  löschen
 						r.setWert(smallestWert(r.getRight()));									// Niedrigsten darunter liegenden Wert setzen
 						r.setRight(removeSmallestWertElement(r.getRight()));					// Element ohne Element mit niedrigstem Wert setzen
-					} else {																	// RR
+					} else {																	// RR  löschen
+						if(r.getLeft() != null) {
+							r.getRight().setLeft(r.getRight());									// Linkes Element an vorgesehenem rechtem Element verknüpfen
+						}
 						r.replace(r.getRight());												// Element ohne aktuelles Element setzen
 					}
 				}  else {																		// Ohne Childs
@@ -474,12 +521,12 @@ public class Main {
 	 * Erstellt
 	 */
 	private static int smallestWert(TElement r){
-        int smallW = r.getWert();
-        while (r.getLeft() != null) {
-        	smallW = r.getLeft().getWert();
-            r = r.getLeft();
-        }
-        return smallW;
+        int smallW = r.getWert();																// Wert des aktuellen Elements als kleinsten Wert zwischenspeichern   
+        while (r.getLeft() != null) {                                                           // Solange es ein Element mit kleinerem Wert gibt...                  
+        	smallW = r.getLeft().getWert();                                                     // Kleineren Wert zwischenspeichern zur Rückgabe                      
+            r = r.getLeft();                                                                    // Element mit kleinerem Wert als aktuelels Element zwischenspeichern 
+        }                                                                                                                                                            
+        return smallW;                                                                          // Kleinsten Wert ausgeben                                             
     }
 	
 	/**
@@ -489,12 +536,12 @@ public class Main {
 	 * Erstellt
 	 */
 	private static int biggestWert(TElement r){
-        int biggestW = r.getWert();
-        while (r.getRight() != null) {
-        	biggestW = r.getRight().getWert();
-            r = r.getRight();
+        int biggestW = r.getWert();																// Wert des aktuellen Elements als höchsten Wert zwischenspeichern
+        while (r.getRight() != null) {															// Solange es ein Element mit größerem Wert gibt...
+        	biggestW = r.getRight().getWert();													// Größeren Wert zwischenspeichern zur Rückgabe
+            r = r.getRight();																	// Element mit größerem Wert als aktuellen Element zwischenspeichern
         }
-        return biggestW;
+        return biggestW;																		// Größten Wert ausgeben
     }
 	
 	/**
@@ -504,14 +551,14 @@ public class Main {
 	 * Erstellt
 	 */
 	private static TElement removeSmallestWertElement(TElement r){
-		TElement smallestWertElement = r;
-		TElement smallestWertParentElement = null;
-        while (smallestWertElement.getLeft() != null) {
-        	smallestWertParentElement = smallestWertElement;
-        	smallestWertElement = smallestWertElement.getLeft();
-        }
-        smallestWertParentElement.setLeft(null);
-        return r;
+		TElement smallestWertElement = r;														// Aktuelles Element zwischenspeichern                                                
+		TElement smallestWertParentElement = null;                                              // Vorgängerelements ist noch nicht vorhanden                                          
+        while (smallestWertElement.getLeft() != null) {                                         // Solange es ein Element mit kleinerem Wert gibt...                                             
+        	smallestWertParentElement = smallestWertElement;                                    // Aktuelles Element als Vorgängerelement zum Löschen des nächst kleinesten Werts zwischenspeichern
+        	smallestWertElement = smallestWertElement.getLeft();                                // Neues Element mit kleinstem Wert zum Überprüfen zwischenspeichern                              
+        }                                                                                                                                                                                       
+        smallestWertParentElement.setLeft(null);                                                // Kleinsten Wert löschen                                                                         
+        return r;                                                                               // Bearbeiteten Baum zurückgeben                                                                
     }
 	
 	/**
@@ -521,13 +568,96 @@ public class Main {
 	 * Erstellt
 	 */
 	private static TElement removeBiggestWertElement(TElement r){
-		TElement biggestWertElement = r;
-		TElement biggestWertParentElement = null;
-        while (biggestWertElement.getRight() != null) {
-        	biggestWertParentElement = biggestWertElement;
-        	biggestWertElement = biggestWertElement.getRight();
+		TElement biggestWertElement = r;														// Aktuelles Element zwischenspeichern
+		TElement biggestWertParentElement = null;												// Vorgängerelement ist noch nicht vorhanden
+        while (biggestWertElement.getRight() != null) {											// Solange es ein Element mit größerem Wert gibt...
+        	biggestWertParentElement = biggestWertElement;										// Aktuelles Element als Vorgängerelement zum Löschen des nächst größten Werts zwischenspeichern
+        	biggestWertElement = biggestWertElement.getRight();									// Neues Element mit größtem Wert zum Überprüfen zwischenspeichern
         }
-        biggestWertParentElement.setRight(null);
-        return r;
+        biggestWertParentElement.setRight(null);												// Größten Wert löschen
+        return r;																				// Bearbeiteten Baum zurückgeben
     }
+	
+	@SuppressWarnings("serial")
+	public class TreePanel extends JPanel implements treeListener{
+		private final Color STD_BACKGROUND = Color.WHITE;						// Konstanten für Farben
+		private final Color STD_PAINT = Color.BLACK;
+		private final int ELEMENT_WIDTH = 65;
+		private final int ELEMENT_HEIGHT = 30;
+		
+//		private int width = 50;
+//		private int height = 50;
+				
+//		private double scale = 0.1;
+
+		public TreePanel() {
+			super();
+		}
+
+		public void paintComponent(Graphics g) {
+			super.paintComponent(g);
+			
+			this.setBackground(STD_BACKGROUND);
+			
+			Graphics2D g2 = (Graphics2D) g;
+			if(root != null) {
+				drawTree(g2);
+			}
+//			int w = this.getWidth(); // real width of canvas
+//			int h = this.getHeight();// real height of canvas
+//			// Translate used to make sure scale is centered
+//			g2.translate(w/2, h/2);
+//			g2.scale(scale, scale);
+//			g2.translate(-w/2, -h/2);
+			
+//			g2.setColor(STD_PAINT);
+//			g2.drawOval(this.getWidth()/2-ELEMENT_WIDTH/2, 0, ELEMENT_WIDTH, ELEMENT_HEIGHT);
+//			if(root != null) {
+//				g2.drawString(String.valueOf(root.getWert()), this.getWidth()/2, 50);
+//			}
+		}
+		
+		private void drawTree(Graphics2D g) {
+			drawTree(g, root, this.getWidth() / 2, 0);
+		}
+		
+		private void drawTree(Graphics2D g, TElement curElement, int drawX, int drawY) {
+				g.setColor(STD_PAINT);
+				g.drawOval(drawX - ELEMENT_WIDTH / 2, drawY, ELEMENT_WIDTH, ELEMENT_HEIGHT);
+				String drawStr= String.valueOf(curElement.getWert());
+				g.drawString(drawStr, drawX - g.getFontMetrics().stringWidth(drawStr) / 2, drawY + g.getFontMetrics().getHeight() + 4);
+				if(curElement.getLeft() != null) {
+					g.drawLine(drawX, drawY + ELEMENT_HEIGHT, drawX / 2, drawY + ELEMENT_HEIGHT + 10);
+					drawTree(g, curElement.getLeft(), drawX / 2 , drawY + ELEMENT_HEIGHT + 10);
+				}
+				if(curElement.getRight() != null) {
+					g.drawLine(drawX, drawY + ELEMENT_HEIGHT, drawX / 2 + drawX, drawY + ELEMENT_HEIGHT + 10);
+					drawTree(g, curElement.getRight(), drawX / 2 + drawX, drawY + ELEMENT_HEIGHT + 10);
+				}
+		}
+
+//		public double getScale() {
+//			return scale;
+//		}
+	//
+//		public void setScale(double scale) {
+//			this.scale = scale;
+//		}
+		
+		
+		
+//		public Dimension getPreferredSize() {
+//			return new Dimension(width,height);
+//		}
+	//	
+//		public void setPreferredSize(Dimension d) {
+//			this.width=d.width;
+//			this.height=d.height;
+//		}
+		
+		@Override
+		public void onTreeChanged() {
+			this.paintComponent(this.getGraphics());									// Komponente neu zeichnen, wenn sich etwas im Baum ändert
+		}
+	}
 }

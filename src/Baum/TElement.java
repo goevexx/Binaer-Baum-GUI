@@ -1,20 +1,36 @@
 package Baum;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TElement {
+	private List<treeListener> treeListeners = new ArrayList<treeListener>();						// Liste der TreeListener. Vorgesehen für TreePanel
+	
 	private int data;
 	private int hoehe;
 	private TElement left;
 	private TElement right;
 
-	public TElement() {
+	public TElement(treeListener tl) {
 		super();
 		this.hoehe = 0;
+		addListener(tl);
 	}
 
 	public TElement(int hoehe) {
 		super();
 		this.hoehe = hoehe;
 	}
+
+    public void addListener(treeListener toAdd) {													// Fügt einen Listener hinzu
+        treeListeners.add(toAdd);
+    }
+    
+    public void notifyOnTreeChangedListeners() {													// Ruft alle onTreeChanged Methoden der Listener auf
+    	for (treeListener tl : treeListeners) {
+			tl.onTreeChanged();
+		}
+    }
 
 	public int getHoehe() {
 		return hoehe;
@@ -30,6 +46,7 @@ public class TElement {
 
 	public void setWert(int wert) {
 		this.data = wert;
+		notifyOnTreeChangedListeners();
 	}
 
 	public TElement getLeft() {
@@ -38,6 +55,7 @@ public class TElement {
 
 	public void setLeft(TElement left) {
 		this.left = left;
+		notifyOnTreeChangedListeners();
 	}
 
 	public TElement getRight() {
@@ -46,6 +64,7 @@ public class TElement {
 
 	public void setRight(TElement right) {
 		this.right = right;
+		notifyOnTreeChangedListeners();
 	}
 	
 	public void replace(TElement replace) {
@@ -53,11 +72,7 @@ public class TElement {
 		this.hoehe = replace.getHoehe();
 		this.left = replace.getLeft();
 		this.right = replace.getRight();
-	}
-
-	@Override
-	public TElement clone() throws CloneNotSupportedException {
-		return (TElement)super.clone();
+		notifyOnTreeChangedListeners();
 	}
 	
 }
