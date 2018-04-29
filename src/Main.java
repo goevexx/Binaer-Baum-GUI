@@ -144,7 +144,7 @@ public class Main {
 					System.err.println(ex);														// Gebe Fehler in Konsole und auf dem Bildschirm aus
 					JOptionPane.showMessageDialog(frmBinrerBaum, "Ungültige Eingabe");
 				} finally {
-					addTxtF.requestFocus();													// Für neue Eingabe vorbereiten
+					addTxtF.requestFocus();														// Für neue Eingabe vorbereiten
 					addTxtF.selectAll();		
 				}
 			}
@@ -258,12 +258,12 @@ public class Main {
 		postOrderBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					orderTxtF.setText(PostOrder(root));										// Baum mit PostOrder ausgeben
-				} catch (NullPointerException ex) {											// Fangen, wenn noch kein Element im Baum ist
-					System.err.println(ex);													// Fehler in der Konsole und auf dem Bildschirm ausgeben
+					orderTxtF.setText(PostOrder(root));											// Baum mit PostOrder ausgeben
+				} catch (NullPointerException ex) {												// Fangen, wenn noch kein Element im Baum ist
+					System.err.println(ex);														// Fehler in der Konsole und auf dem Bildschirm ausgeben
 					JOptionPane.showMessageDialog(frmBinrerBaum, "Root is nicht gesetzt");							
-					orderTxtF.setText("");													// Ausgabe zurücksetzen
-					addTxtF.requestFocus();													// Für neue Eingabe vorbereiten
+					orderTxtF.setText("");														// Ausgabe zurücksetzen
+					addTxtF.requestFocus();														// Für neue Eingabe vorbereiten
 					addTxtF.selectAll();
 				}
 			}
@@ -281,12 +281,12 @@ public class Main {
 		inOrderBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					orderTxtF.setText(InOrder(root));										// Baum mit InOrder ausgeben
-				} catch (NullPointerException ex) {											// Fangen, wenn noch kein Element im Baum ist
-					System.err.println(ex);													// Fehler in der Konsole und auf dem Bildschirm ausgeben
+					orderTxtF.setText(InOrder(root));											// Baum mit InOrder ausgeben
+				} catch (NullPointerException ex) {												// Fangen, wenn noch kein Element im Baum ist
+					System.err.println(ex);														// Fehler in der Konsole und auf dem Bildschirm ausgeben
 					JOptionPane.showMessageDialog(frmBinrerBaum, "Root is nicht gesetzt");							
-					orderTxtF.setText("");													// Ausgabe zurücksetzen
-					addTxtF.requestFocus();													// Für neue Eingabe vorbereiten
+					orderTxtF.setText("");														// Ausgabe zurücksetzen
+					addTxtF.requestFocus();														// Für neue Eingabe vorbereiten
 					addTxtF.selectAll();
 				}
 			}
@@ -298,12 +298,12 @@ public class Main {
 		preOrderBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					orderTxtF.setText(PreOrder(root));										// Baum in PreOrder ausgeben
-				} catch (NullPointerException ex) {											// Fangen, wenn noch kein Element im Baum ist
-					System.err.println(ex);													// Fehler in der Konsole und auf dem Bildschirm ausgeben
+					orderTxtF.setText(PreOrder(root));											// Baum in PreOrder ausgeben
+				} catch (NullPointerException ex) {												// Fangen, wenn noch kein Element im Baum ist
+					System.err.println(ex);														// Fehler in der Konsole und auf dem Bildschirm ausgeben
 					JOptionPane.showMessageDialog(frmBinrerBaum, "Root is nicht gesetzt");							
-					orderTxtF.setText("");													// Ausgabe zurücksetzen
-					addTxtF.requestFocus();													// Für neue Eingabe vorbereiten
+					orderTxtF.setText("");														// Ausgabe zurücksetzen
+					addTxtF.requestFocus();														// Für neue Eingabe vorbereiten
 					addTxtF.selectAll();
 				}
 			}
@@ -643,7 +643,6 @@ public class Main {
 	
 	/**
 	 * Unterklasse zur Darstellung des Baumes
-	 * param:	r: TElement	: Baum
 	 * Version 1
 	 * Erstellt
 	 */
@@ -702,7 +701,7 @@ public class Main {
 		
 		@Override
 		public void onTreeChanged() {
-			this.paintComponent(this.getGraphics());									// Komponente neu zeichnen, wenn sich etwas im Baum ändert
+			this.paintComponent(this.getGraphics());											// Komponente neu zeichnen, wenn sich etwas im Baum ändert
 		}
 	}
 }

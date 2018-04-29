@@ -77,7 +77,7 @@ public class TElement {
 	 * Version 1
 	 * Erstellt
 	 */
-    public void addListener(treeListener toAdd) {												// Fügt einen Listener hinzu
+    public void addListener(treeListener toAdd) {				
         treeListeners.add(toAdd);
     }
     
@@ -86,7 +86,7 @@ public class TElement {
 	 * Version 1
 	 * Erstellt
 	 */
-    public void notifyOnTreeChangedListeners() {												// Ruft alle onTreeChanged Methoden der Listener auf
+    public void notifyOnTreeChangedListeners() {			
     	for (treeListener tl : treeListeners) {
 			tl.onTreeChanged();
 		}
