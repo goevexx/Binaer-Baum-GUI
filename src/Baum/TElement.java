@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TElement {
-	private List<treeListener> treeListeners = new ArrayList<treeListener>();						// Liste der TreeListener. Vorgesehen für TreePanel
+	private List<treeListener> treeListeners = new ArrayList<treeListener>();					// Liste der TreeListener. Vorgesehen für TreePanel
 	
 	private int data;
 	private int hoehe;
@@ -21,16 +21,6 @@ public class TElement {
 		super();
 		this.hoehe = hoehe;
 	}
-
-    public void addListener(treeListener toAdd) {													// Fügt einen Listener hinzu
-        treeListeners.add(toAdd);
-    }
-    
-    public void notifyOnTreeChangedListeners() {													// Ruft alle onTreeChanged Methoden der Listener auf
-    	for (treeListener tl : treeListeners) {
-			tl.onTreeChanged();
-		}
-    }
 
 	public int getHoehe() {
 		return hoehe;
@@ -67,6 +57,12 @@ public class TElement {
 		notifyOnTreeChangedListeners();
 	}
 	
+	/**
+	 * Ersetzt Attributswerte
+	 * param:	replace	: TElement	: Baum
+	 * Version 1
+	 * Erstellt
+	 */
 	public void replace(TElement replace) {
 		this.data = replace.getWert();
 		this.hoehe = replace.getHoehe();
@@ -74,5 +70,25 @@ public class TElement {
 		this.right = replace.getRight();
 		notifyOnTreeChangedListeners();
 	}
-	
+
+	/**
+	 * Fügt Listener hinzu
+	 * param:	toAdd: treeListener	: Listener
+	 * Version 1
+	 * Erstellt
+	 */
+    public void addListener(treeListener toAdd) {												// Fügt einen Listener hinzu
+        treeListeners.add(toAdd);
+    }
+    
+    /**
+	 * Ruft OnTreeChanged Listeners auf
+	 * Version 1
+	 * Erstellt
+	 */
+    public void notifyOnTreeChangedListeners() {												// Ruft alle onTreeChanged Methoden der Listener auf
+    	for (treeListener tl : treeListeners) {
+			tl.onTreeChanged();
+		}
+    }
 }
