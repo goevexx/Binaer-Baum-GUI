@@ -1,10 +1,8 @@
 package Baum;
 
 /**
- * Interface für Implementierung von Listener für TElement
- * Version 1
- * Erstellt
+ * Interface fÃ¼r Implementierung von Listener fÃ¼r TElement Version 1 Erstellt
  */
-public interface treeListener {																
-	void onTreeChanged();																		// Event Listener, der aufgerufen wird, wenn Attribute im Baum geändert werden
+public interface treeListener {
+	void onTreeChanged(); // Event Listener, der aufgerufen wird, wenn Attribute im Baum geÃ¶ndert werden
 }

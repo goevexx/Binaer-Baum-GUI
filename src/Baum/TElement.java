@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TElement {
-	private List<treeListener> treeListeners = new ArrayList<treeListener>();					// Liste der TreeListener. Vorgesehen für TreePanel
-	
+	private List<treeListener> treeListeners = new ArrayList<treeListener>(); // Liste der TreeListener. Vorgesehen fÃ¼r
+																				// TreePanel
+
 	private int data;
 	private int hoehe;
 	private TElement left;
@@ -56,12 +57,9 @@ public class TElement {
 		this.right = right;
 		notifyOnTreeChangedListeners();
 	}
-	
+
 	/**
-	 * Ersetzt Attributswerte
-	 * param:	replace	: TElement	: Baum
-	 * Version 1
-	 * Erstellt
+	 * Ersetzt Attributswerte param: replace : TElement : Baum Version 1 Erstellt
 	 */
 	public void replace(TElement replace) {
 		this.data = replace.getWert();
@@ -72,23 +70,18 @@ public class TElement {
 	}
 
 	/**
-	 * Fügt Listener hinzu
-	 * param:	toAdd: treeListener	: Listener
-	 * Version 1
-	 * Erstellt
+	 * FÃ¼gt Listener hinzu param: toAdd: treeListener : Listener Version 1 Erstellt
 	 */
-    public void addListener(treeListener toAdd) {				
-        treeListeners.add(toAdd);
-    }
-    
-    /**
-	 * Ruft OnTreeChanged Listeners auf
-	 * Version 1
-	 * Erstellt
+	public void addListener(treeListener toAdd) {
+		treeListeners.add(toAdd);
+	}
+
+	/**
+	 * Ruft OnTreeChanged Listeners auf Version 1 Erstellt
 	 */
-    public void notifyOnTreeChangedListeners() {			
-    	for (treeListener tl : treeListeners) {
+	public void notifyOnTreeChangedListeners() {
+		for (treeListener tl : treeListeners) {
 			tl.onTreeChanged();
 		}
-    }
+	}
 }
