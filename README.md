@@ -1,6 +1,6 @@
 # Binär-Baum-GUI
 
-![Anzeige](binärbaum.gif)
+![Binärbaum Anzeige](Binärbaum.gif)
 
 ## Funktionen
 
